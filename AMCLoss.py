@@ -12,7 +12,7 @@ class SiameseDistanceMetric(Enum):
     EUCLIDEAN = lambda x, y: F.pairwise_distance(x, y, p=2)
     MANHATTAN = lambda x, y: F.pairwise_distance(x, y, p=1)
     COSINE_DISTANCE = lambda x, y: 1-F.cosine_similarity(x, y)
-    GEODESIC = lambda x, y: torch.acos(x, y)
+    GEODESIC = lambda x, y: torch.acos(F.normalize(x), F.normalize(y))
 
 
 class ContrastiveLoss(nn.Module):

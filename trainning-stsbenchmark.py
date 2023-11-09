@@ -3,6 +3,7 @@ import math
 from sentence_transformers import SentenceTransformer,  LoggingHandler, losses, models, util
 from sentence_transformers.evaluation import EmbeddingSimilarityEvaluator
 from sentence_transformers.readers import InputExample
+from AMCLoss import ContrastiveLoss
 import logging
 from datetime import datetime
 import sys
@@ -67,7 +68,7 @@ with gzip.open(sts_dataset_path, 'rt', encoding='utf8') as fIn:
 
 
 train_dataloader = DataLoader(train_samples, shuffle=True, batch_size=train_batch_size)
-train_loss = losses.CosineSimilarityLoss(model=model)
+train_loss = ContrastiveLoss(model=model)
 
 
 logging.info("Read STSbenchmark dev dataset")

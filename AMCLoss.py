@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Iterable, Dict
 import torch.nn.functional as F
 from torch import nn, Tensor
+import torch
 from sentence_transformers.SentenceTransformer import SentenceTransformer
 
 
@@ -12,7 +13,16 @@ class SiameseDistanceMetric(Enum):
     EUCLIDEAN = lambda x, y: F.pairwise_distance(x, y, p=2)
     MANHATTAN = lambda x, y: F.pairwise_distance(x, y, p=1)
     COSINE_DISTANCE = lambda x, y: 1-F.cosine_similarity(x, y)
-    GEODESIC = lambda x, y: torch.acos(F.normalize(x), F.normalize(y))
+    # AMC GEODESIC LOSS
+    def GEODESIC(x, y):
+        # print(x, y)
+        R_diffs = F.normalize(x).unsqueeze(0) @ F.normalize(y).unsqueeze(0).permute(0, 2, 1)
+        traces = R_diffs.diagonal(dim1=-2, dim2=-1).sum(-1)
+        # traces = (F.normalize(x)*F.normalize(y)).sum(-1)
+        # print(traces)
+        dists = torch.acos(torch.clamp(traces, 1e-7 - 1, 1 - 1e-7))
+        # print(dists)
+        return dists*5
 
 
 class ContrastiveLoss(nn.Module):
@@ -44,7 +54,7 @@ class ContrastiveLoss(nn.Module):
 
     """
 
-    def __init__(self, model: SentenceTransformer, distance_metric=SiameseDistanceMetric.GEODESIC, margin: float = 0.5, size_average:bool = True):
+    def __init__(self, model: SentenceTransformer, distance_metric=SiameseDistanceMetric.GEODESIC, margin: float = 2.5, size_average:bool = True):
         super(ContrastiveLoss, self).__init__()
         self.distance_metric = distance_metric
         self.margin = margin
